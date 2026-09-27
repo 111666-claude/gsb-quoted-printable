@@ -18,7 +18,7 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     try:
         if args.encode_hex:
-            print(encode(bytes.fromhex(args.encode_hex)).decode("ascii"))
+            print(encode(bytes.fromhex(args.encode_hex), wrap=args.wrap).decode("ascii"))
             return 0
         if args.decode is not None:
             text = args.decode.replace("\\n", "\n")
