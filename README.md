@@ -19,12 +19,14 @@ python3 -m unittest discover -s tests -v
 - 不变量：`decode(encode(x)) == x`（任意字节串）；`encode` 的每行长度 ≤ wrap；同一输入重复结果相同。
 - 规模：100 MB 单遍流式编解码，内存 O(一行)。
 
-## 现在的行为
+## 实现
 
-- `encode` 只在「不可打印字节」上转义，`=`（0x3D）被当成可打印字符原样输出 —— 编码结果无法解码回原值。
-- `decode` 不认软换行：`=` 后面直接取两位十六进制，于是 `=\n` 里的换行被当成十六进制数字的一部分。
-- `--wrap` 参数被解析出来但没有使用；没有行长控制。
-- 错误只有一句话，没有偏移。
+- `qpcodec/qp.py`：`iter_encode` / `iter_decode` 是单遍流式核心（内存 O(一行)），
+  `encode` / `decode` 是它们的一次性包装；`QpError` 带 `offset` 属性。
+- `qpcodec/reference.py`：按规范逐步处理的参考实现，测试里与流式实现逐字节对照
+  （1 万份随机字节串的编码结果、解码结果、错误偏移都必须一致）。
+- 编码时行尾空格/制表符转义成 `=20`/`=09`；`--wrap`（默认 76）含行尾软换行的 `=` 在内，
+  每行长度都不超过 wrap。
 
 ## 计划新增的能力
 
@@ -42,7 +44,8 @@ QP 文本 / 十六进制
 ## 目录
 
 ```
-qpcodec/qp.py   编解码与校验
-qpcodec/cli.py  命令行入口
-tests/          unittest 用例
+qpcodec/qp.py        编解码与校验（流式核心）
+qpcodec/reference.py 逐步处理的参考实现（测试对照用）
+qpcodec/cli.py       命令行入口
+tests/               unittest 用例
 ```
